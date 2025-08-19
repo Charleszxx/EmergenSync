@@ -2,12 +2,21 @@ import sqlite3 from "sqlite3";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(cors());
 app.use(bodyParser.json());
+
+// 👉 Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, "public")));
 
 // Open SQLite database
 const db = new sqlite3.Database("./emergensync.db", (err) => {
@@ -67,4 +76,11 @@ app.get("/api/emergency", (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// 👉 Fallback: if no API route matches, serve index.html
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
+);
